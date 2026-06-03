@@ -1,4 +1,4 @@
-
+// --- CORE FINANCIAL QUIRIES ---
 
 SELECT 
     products.product_category,
