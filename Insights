@@ -1,0 +1,87 @@
+
+
+SELECT 
+    products.product_category,
+    COUNT(sales.sales_id) AS total_sales
+FROM products
+JOIN sales ON products.product_id = sales.product_id
+WHERE 1=1
+  [[AND {{date_filter}}]]
+  [[AND {{product_category}}]]
+GROUP BY products.product_category
+ORDER BY 1;
+------------------------------------------------------
+select count(sales_id),
+{{date}}
+from sales
+group by {{date}}
+order by 1
+---------------------------------------------------------
+WITH most_profit AS (
+    SELECT 
+        ROUND(SUM((products.product_price - products.product_cost) * sales.unit_sold)::numeric, 2) AS profit
+    FROM sales
+    JOIN products ON sales.product_id = products.product_id
+    JOIN store ON sales.store_id = store.store_id
+    GROUP BY store.store_id
+    ORDER BY profit DESC
+    LIMIT 1
+),
+least_profit AS (
+    SELECT 
+        ROUND(SUM((products.product_price - products.product_cost) * sales.unit_sold)::numeric, 2) AS profit
+    FROM sales
+    JOIN products ON sales.product_id = products.product_id
+    JOIN store ON sales.store_id = store.store_id
+    GROUP BY store.store_id
+    ORDER BY profit ASC
+    LIMIT 1
+)
+SELECT 
+  
+    ROUND(
+        (((most_profit.profit - least_profit.profit) / NULLIF(ABS(least_profit.profit), 0)) * 100)::numeric, 
+        2
+    ) AS profit_percentage_difference
+FROM most_profit, least_profit;
+-----------------------------------------------------------------------------------------------------------------
+
+
+
+SELECT 
+    store.store_name ,
+	store.store_city,
+   round( SUM(products.product_price * sales.unit_sold)) AS total_revenue
+FROM sales
+LEFT JOIN products ON products.product_id = sales.product_id
+LEFT JOIN store ON store.store_id = sales.store_id 
+GROUP BY 1,2
+ORDER BY total_revenue 
+-----------------------------------------------------------------------------------------------------------------
+
+select products.product_name,
+date_trunc('month', sales.date) as month_start,
+round(sum((products.product_price-products.product_cost)* sales.unit_sold))as profit_margin
+from products
+left join sales on sales.product_id=products.product_id
+where 1=1
+[[and  {{date_filter}}]]
+[[ and {{product_name}}]]
+group by 1,2
+order by 1 
+-------------------------------------------------------------------------------------------------------------
+SELECT 
+    DATE_TRUNC('week', sales.calender_date) AS week_start,
+    SUM((products.product_price - products.product_cost) * sales.unit_sold) AS weekly_profit,
+    {{target}}::numeric AS weekly_target, 
+    ((SUM((products.product_price - products.product_cost) * sales.unit_sold) - {{target}}::numeric)) AS variance
+FROM sales
+JOIN products ON sales.product_id = products.product_id
+WHERE 1=1
+  [[AND {{date_filter}}]]
+GROUP BY 1, 3
+ORDER BY 1;
+
+
+
+
